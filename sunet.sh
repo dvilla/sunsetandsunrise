@@ -1,18 +1,22 @@
 #!/bin/bash
 
-IP=`curl -s ifconfig.co`
+function get_ip(){
+    curl -s ifconfig.co
+}
 
-PLACE=`curl -s "freegeoip.net/json/${IP}"`
+function get_place(){
+    curl -s "freegeoip.net/json/$(get_ip)"
+}
 
-LATITUD=`echo $PLACE | python -m json.tool | grep latitude | sed 's/[^0-9\.-]//g'`
+function get_degree(){
+    echo "$(get_place)" | python -m json.tool | grep $1 | sed 's/[^0-9\.-]//g'
+}
 
-LONGITUD=`echo $PLACE | python -m json.tool | grep longitude | sed 's/[^0-9\.-]//g'`
+SUN_MOVEMENT=`curl -s "https://api.sunrise-sunset.org/json?lat=$(get_degree latitude)&lng=$(get_degree longitude)&formatted=0"`
 
-SUNSET_DATA=`curl -s "https://api.sunrise-sunset.org/json?lat=${LATITUD}&lng=${LONGITUD}&formatted=0"` 
+SUNSET_UTC_TIME=`echo $SUN_MOVEMENT | python -m json.tool | grep sunset | sed -E "s/(\"sunset\":[[:blank:]]\")(.*)(.$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '` 
 
-SUNSET_UTC_TIME=`echo $SUNSET_DATA | python -m json.tool | grep sunset | sed -E "s/(\"sunset\":[[:blank:]]\")(.*)(.$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '` 
-
-SUNRISE_UTC_TIME=`echo $SUNSET_DATA | python -m json.tool | grep sunrise | sed -E "s/(\"sunrise\":[[:blank:]]\")(.*)(..$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '`
+SUNRISE_UTC_TIME=`echo $SUN_MOVEMENT | python -m json.tool | grep sunrise | sed -E "s/(\"sunrise\":[[:blank:]]\")(.*)(..$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '`
 
 SUNSET_LOCAL_TIME=`date -jf "%Y-%m-%dT%H:%M:%S %z" "${SUNSET_UTC_TIME}" +"%Y/%m/%d %H:%M:%S"`
 
