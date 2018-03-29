@@ -18,5 +18,4 @@ SUNSET_LOCAL_TIME=`date -jf "%Y-%m-%dT%H:%M:%S %z" "${SUNSET_UTC_TIME}" +"%Y/%m/
 
 SUNRISE_UTC_TIME=`date -jf "%Y-%m-%dT%H:%M:%S %z" "${SUNRISE_UTC_TIME}" +"%Y/%m/%d %H:%M:%S"`
 
-echo "SUNRISE: $SUNRISE_UTC_TIME"
-echo "SUNSET: $SUNSET_LOCAL_TIME"
+echo -e "SUNRISE: $SUNRISE_UTC_TIME\nSUNSET: $SUNSET_LOCAL_TIME"
