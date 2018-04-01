@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#Declaring variable to not curl twice
+SUN_MOVEMENT=""
+
 function get_ip(){
     curl -s ifconfig.co
 }
@@ -12,11 +15,17 @@ function get_degree(){
     echo "$(get_place)" | python -m json.tool | grep $1 | sed 's/[^0-9\.-]//g'
 }
 
-SUN_MOVEMENT=`curl -s "https://api.sunrise-sunset.org/json?lat=$(get_degree latitude)&lng=$(get_degree longitude)&formatted=0"`
+function sun_movement(){
+    if [ -z "$SUN_MOVEMENT" ]
+        then
+            SUN_MOVEMENT=`curl -s "https://api.sunrise-sunset.org/json?lat=$(get_degree latitude)&lng=$(get_degree longitude)&formatted=0" | python -m json.tool`
+    fi
+    echo $SUN_MOVEMENT
+}
 
-SUNSET_UTC_TIME=`echo $SUN_MOVEMENT | python -m json.tool | grep sunset | sed -E "s/(\"sunset\":[[:blank:]]\")(.*)(.$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '` 
+SUNSET_UTC_TIME=`echo $(sun_movement) | python -m json.tool | grep sunset | sed -E "s/(\"sunset\":[[:blank:]]\")(.*)(.$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '` 
 
-SUNRISE_UTC_TIME=`echo $SUN_MOVEMENT | python -m json.tool | grep sunrise | sed -E "s/(\"sunrise\":[[:blank:]]\")(.*)(..$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '`
+SUNRISE_UTC_TIME=`echo $(sun_movement) | python -m json.tool | grep sunrise | sed -E "s/(\"sunrise\":[[:blank:]]\")(.*)(..$)/\2/g" | sed -E "s/(00):(00)/\1\2/g" | tr -d ' '`
 
 SUNSET_LOCAL_TIME=`date -jf "%Y-%m-%dT%H:%M:%S %z" "${SUNSET_UTC_TIME}" +"%Y/%m/%d %H:%M:%S"`
 
